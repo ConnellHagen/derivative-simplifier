@@ -8,7 +8,7 @@ let showOp =
     | Mult -> "*"
     | Div -> "/"
     | Pow -> "^"
-    
+
 let rec showExpr =
     function
     | Fun (f, lst) -> f^"("^String.concat "," (List.map showExpr lst) ^")"
