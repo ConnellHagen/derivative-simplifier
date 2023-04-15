@@ -17,7 +17,7 @@ let rec showExpr =
     | Binop (op,l,r) -> showExprParens l ^ showOp op ^ showExprParens r
     | Ddx (v,e) -> "d/d"^v^" "^showExprParens e
 and showExprParens e =
-match e with 
+    match e with 
     | Binop _ -> "("^showExpr e ^")"
     | Ddx _ -> "("^showExpr e ^")"
     | _ -> showExpr e

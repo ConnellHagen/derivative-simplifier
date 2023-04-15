@@ -46,19 +46,71 @@ module type ApplyRule = sig
     val apply_rule : string rule -> string expr -> string expr option
 end
 
+module SubMap = Map.Make(String)
 
     (** The following is a dummy module, it contains the wrong code!!
     Its purpose is to give you something that compiles, so you can start working on the other parts.
     *)
-module Substitution : Substitution = struct
-    type 'a substitution = ()
+module Substitution = struct (*with type substitution = 'a expr SubMap.t*)
 
-    let singleton (x : string) (e : 'a expr) : 'a substitution = ()
-    let empty : 'a substitution = ()
+    type 'a substitution = 'a expr SubMap.t
+
+    let singleton (x : string) (e : 'a expr) : 'a substitution = SubMap.(empty |> add x e)
+
+    let empty : 'a substitution = SubMap.empty
+
     let for_all (f : string -> 'a expr -> bool) (subst : 'a substitution) : bool = true
 
-    let combine_substitutions (a : 'a substitution option)
-                            (b : 'a substitution option) : 'a substitution option = Some ()
+    let combine_substitutions (a : 'a substitution option) (b : 'a substitution option) : 'a substitution option =
+        let no_inc_dups a b =
+            let rec b_dups (ak, av) b =
+                match b with
+                | [] -> true
+                | (bk, bv) :: t -> 
+                    if ak <> bk then b_dups (ak, av) t 
+                    else 
+                    if bv <> av then false
+                    else b_dups (ak, av) t
+            in
+            let rec a_dups a b =
+                match a with
+                | [] -> true
+                | h :: t -> if b_dups h b then a_dups t b else false
+            in
+            a_dups a b
+
+            (* Connell's code (big and probably unnecessary)
+            let compat_pair a_pair b_pair =
+                match (a_pair, b_pair) with
+                | ((k, v), (k, v)) -> true
+                | ((k, v), (k, v')) -> false
+                | _ -> true
+            in
+            let rec loop_b a_pair b =
+                match b with
+                | [] -> true
+                | h :: t -> 
+                    if compat_pair a_pair h = false then false
+                    else loop_b a_pair t
+            in
+            let rec loop_a a b =
+                match a with
+                | [] -> true
+                | h :: t -> 
+                    if loop_b h b_pair = false then false
+                    else loop_a t b *)
+        in
+        match (a, b) with
+        | (Some a, Some b) ->
+            let a_pairs = SubMap.bindings a
+            and
+            b_pairs = SubMap.bindings b
+            in
+            if no_inc_dups a_pairs b_pairs then Some (SubMap.union (fun k v1 v2 -> Some v1) a b)
+            else None
+        | (_, _) -> None
+
+
     exception MalformedSubstitution of string
 
     let rec substitute (subst : 'a substitution) (pattern : string expr) : 'a expr = raise (MalformedSubstitution "Something is still not implemented yet")

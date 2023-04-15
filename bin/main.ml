@@ -1,4 +1,3 @@
-
 open Simplifier
 
 let usage_msg = Sys.executable_name ^ " [-verbose] <file1> [<file2>] ... -e <expression>"
