@@ -1,5 +1,21 @@
 open Simplifier
 
+(** The type of binary operators. *)
+type bop = 
+    | Add
+    | Subt
+    | Mult
+    | Div
+    | Pow
+
+(** The type of the abstract syntax tree (AST). *)
+type 'a expr =
+    | Var of 'a
+    | Fun of string * ('a expr) list
+    | Int of int
+    | Binop of bop * ('a expr) * ('a expr)
+    | Ddx of 'a * ('a expr)
+
 let _ = add_file "../data/rules.ddx"
 
 (* let _ = List.map print_endline (List.map showRule !rules) *)
@@ -29,7 +45,8 @@ let () =
     | None -> print_endline "`xx2_con is `None` (expected result)"
     | Some _ -> Substitution.print_sub @@ Option.get xx2_con
 
-(* We are the group that cannot get these lines to work because something weird is happening *)
-let t_exp = Int 3
-let t_exp = Binop (Add, "x", "y")
-PrintExpr @@ Substitution.substitute t_exp_sub t_exp
+
+let (t_exp : string Simplifier__.Ast.expr) = (Int 3)
+(* let t_exp = Binop (Add, "x", "y") *)
+let t_exp_sub = x_con
+let () = printExpr (Substitution.substitute t_exp_sub t_exp)

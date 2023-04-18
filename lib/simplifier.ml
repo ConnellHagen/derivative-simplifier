@@ -57,18 +57,34 @@ module Substitution = struct
         match (a, b) with
         | (Some a, Some b) ->
             let a_pairs = SubMap.bindings a
-            and
-            b_pairs = SubMap.bindings b
+            and b_pairs = SubMap.bindings b
             in
-            if no_inc_dups a_pairs b_pairs then Some (SubMap.union (fun k v1 v2 -> Some v1) a b)
-            else None
+            if no_inc_dups a_pairs b_pairs 
+                then Some (SubMap.union (fun k v1 v2 -> Some v1) a b)
+                else None
         | (_, _) -> None
 
 
     exception MalformedSubstitution of string
 
     let rec substitute (subst : 'a substitution) (pattern : string expr) : 'a expr =
-        raise @@ MalformedSubstitution "error alert error alert turn off your computer"
+        match pattern with
+        | Var x -> Var x
+        | Fun (f, lst) -> Fun (f, lst)
+        | Int i -> Int i
+        | Binop (op, l, r) -> Binop (op, l, r)
+        | Ddx (v, e) -> Ddx (v, e)
+        (* match pattern with
+        | Fun (f, lst) -> Fun (f, List.map (fun x -> substitute subst x) lst)
+        | Int i -> Int i
+        | Binop (op, l, r) -> Binop (op, substitute subst l, substitute subst r)
+        | Ddx (v, e) -> ( Ddx (v, substitute subst e)
+            (* match v with
+            | Var x -> Ddx (v, substitute subst e)
+            | _ -> raise MalformedSubstitution "Error: cannot derive with respect to an expression"/ *)
+        )
+        | Var x -> SubMap.find x subst *)
+        
 
 
     let print_sub a =

@@ -28,7 +28,7 @@ module type Substitution = sig
     If a variable occurs in [pat] that is not in [subst], a NotFound error is raised.
     An occurrence in 'ddx' requires the variable to be a single variable.
     If it is given an expression instead, the MalformedSubstitution error is raised. *)
-    val substitute : 'a substitution -> string expr -> 'a expr
+    val substitute : string substitution -> string expr -> string expr
 
 end
 
