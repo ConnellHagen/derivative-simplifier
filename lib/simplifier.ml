@@ -22,6 +22,68 @@ and showExprParens e =
     | Ddx _ -> "("^showExpr e ^")"
     | _ -> showExpr e
 
+let printExpr e = print_endline (showExpr e)
+
+module SubMap = Map.Make(String)
+
+module Substitution = struct
+
+    type 'a substitution = 'a expr SubMap.t
+
+    let singleton (x : string) (e : 'a expr) : 'a substitution = SubMap.(empty |> add x e)
+
+    let empty : 'a substitution = SubMap.empty
+
+    let for_all (f : string -> 'a expr -> bool) (subst : 'a substitution) : bool = true
+
+    let combine_substitutions (a : 'a substitution option) (b : 'a substitution option) : 'a substitution option =
+        let no_inc_dups a b =
+            let rec b_dups (ak, av) b =
+                match b with
+                | [] -> true
+                | (bk, bv) :: t -> 
+                    if ak <> bk then b_dups (ak, av) t 
+                    else 
+                    if bv <> av then false
+                    else b_dups (ak, av) t
+            in
+            let rec a_dups a b =
+                match a with
+                | [] -> true
+                | h :: t -> if b_dups h b then a_dups t b else false
+            in
+            a_dups a b
+        in
+        match (a, b) with
+        | (Some a, Some b) ->
+            let a_pairs = SubMap.bindings a
+            and
+            b_pairs = SubMap.bindings b
+            in
+            if no_inc_dups a_pairs b_pairs then Some (SubMap.union (fun k v1 v2 -> Some v1) a b)
+            else None
+        | (_, _) -> None
+
+
+    exception MalformedSubstitution of string
+
+    let rec substitute (subst : 'a substitution) (pattern : string expr) : 'a expr =
+        raise @@ MalformedSubstitution "error alert error alert turn off your computer"
+
+
+    let print_sub a =
+        let rec print_pairs =
+            function
+            | [] -> ()
+            | (a, b) :: t ->
+                print_string a;
+                print_string " -> ";
+                printExpr b;
+                print_pairs t
+        in
+        print_pairs @@ SubMap.bindings a
+end
+
 (** [parseExpr s] parses [s] into an AST. *)
 let parseExpr (s : string) : string expr =
     let lexbuf = Lexing.from_string s in

@@ -8,8 +8,6 @@ let expressions = ref []
 
 let add_expression expr = expressions := parseExpr expr :: !expressions
 
-let printExpr e = print_endline (showExpr e)
-
 let printStep (e,r) = print_endline ("= {"^showRule r^"}");print_string "  ";printExpr e
 
 let speclist =

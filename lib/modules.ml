@@ -1,41 +1,35 @@
 open Ast
 
 module type Substitution = sig
+
     type 'a substitution
 
-    (**
-        combine_substitutions [subst1] [subst2]
-        compares the composition of the substitutions [subst1] and [subst2] for compatibility:
-        equal variables need to be mapped to the same thing.
-        If the composition is compatible, it returns the composition.
-    *)
+(** Singleton [x] [e] returns a substitution that maps [x] to [e]. *)
+    val singleton : string -> 'a expr -> 'a substitution
+
+    
+(** empty returns a substitution that maps nothing. *)
+    val empty : 'a substitution
+
+(** for_all allows you to check whether a substitution satisfies a predicate.
+    It returns true if the predicate is true for all variables in the substitution.
+    This can be used to check if constant-variables are mapped to constants, for example. *)
+    val for_all : (string -> 'a expr -> bool) -> 'a substitution -> bool
+
+(** combine_substitutions [subst1] [subst2]
+    compares the composition of the substitutions [subst1] and [subst2] for compatibility:
+    equal variables need to be mapped to the same thing.
+    If the composition is compatible, it returns the composition. *)
     val combine_substitutions : 'a substitution option -> 'a substitution option -> 'a substitution option
     exception MalformedSubstitution of string
 
-
-    (**
-        substitute [subst] [pat] replaces the variables in [pat] by
-        whatever the subtitution [subst] tells them to be.
-        If a variable occurs in [pat] that is not in [subst], a NotFound error is raised.
-        An occurrence in 'ddx' requires the variable to be a single variable.
-        If it is given an expression instead, the MalformedSubstitution error is raised.
-    *)
+(** substitute [subst] [pat] replaces the variables in [pat] by
+    whatever the subtitution [subst] tells them to be.
+    If a variable occurs in [pat] that is not in [subst], a NotFound error is raised.
+    An occurrence in 'ddx' requires the variable to be a single variable.
+    If it is given an expression instead, the MalformedSubstitution error is raised. *)
     val substitute : 'a substitution -> string expr -> 'a expr
 
-    (**
-        singleton [x] [e] returns a substitution that maps [x] to [e].    
-    *)
-    val singleton : string -> 'a expr -> 'a substitution
-
-    (** empty returns a substitution that maps nothing.
-        *)
-    val empty : 'a substitution
-
-    (** for_all allows you to check whether a substitution satisfies a predicate.
-        It returns true if the predicate is true for all variables in the substitution.
-        This can be used to check if constant-variables are mapped to constants, for example.    
-    *)
-    val for_all : (string -> 'a expr -> bool) -> 'a substitution -> bool
 end
 
 module type ApplyRule = sig
@@ -46,75 +40,6 @@ module type ApplyRule = sig
     val apply_rule : string rule -> string expr -> string expr option
 end
 
-module SubMap = Map.Make(String)
-
-    (** The following is a dummy module, it contains the wrong code!!
-    Its purpose is to give you something that compiles, so you can start working on the other parts.
-    *)
-module Substitution = struct (*with type substitution = 'a expr SubMap.t*)
-
-    type 'a substitution = 'a expr SubMap.t
-
-    let singleton (x : string) (e : 'a expr) : 'a substitution = SubMap.(empty |> add x e)
-
-    let empty : 'a substitution = SubMap.empty
-
-    let for_all (f : string -> 'a expr -> bool) (subst : 'a substitution) : bool = true
-
-    let combine_substitutions (a : 'a substitution option) (b : 'a substitution option) : 'a substitution option =
-        let no_inc_dups a b =
-            let rec b_dups (ak, av) b =
-                match b with
-                | [] -> true
-                | (bk, bv) :: t -> 
-                    if ak <> bk then b_dups (ak, av) t 
-                    else 
-                    if bv <> av then false
-                    else b_dups (ak, av) t
-            in
-            let rec a_dups a b =
-                match a with
-                | [] -> true
-                | h :: t -> if b_dups h b then a_dups t b else false
-            in
-            a_dups a b
-
-            (* Connell's code (big and probably unnecessary)
-            let compat_pair a_pair b_pair =
-                match (a_pair, b_pair) with
-                | ((k, v), (k, v)) -> true
-                | ((k, v), (k, v')) -> false
-                | _ -> true
-            in
-            let rec loop_b a_pair b =
-                match b with
-                | [] -> true
-                | h :: t -> 
-                    if compat_pair a_pair h = false then false
-                    else loop_b a_pair t
-            in
-            let rec loop_a a b =
-                match a with
-                | [] -> true
-                | h :: t -> 
-                    if loop_b h b_pair = false then false
-                    else loop_a t b *)
-        in
-        match (a, b) with
-        | (Some a, Some b) ->
-            let a_pairs = SubMap.bindings a
-            and
-            b_pairs = SubMap.bindings b
-            in
-            if no_inc_dups a_pairs b_pairs then Some (SubMap.union (fun k v1 v2 -> Some v1) a b)
-            else None
-        | (_, _) -> None
-
-
-    exception MalformedSubstitution of string
-
-    let rec substitute (subst : 'a substitution) (pattern : string expr) : 'a expr = raise (MalformedSubstitution "Something is still not implemented yet")
-end
 
 module ApplyRule (Substitution : Substitution) : ApplyRule = struct
     (** matching [pattern] [term]
@@ -153,5 +78,6 @@ module ApplyRule (Substitution : Substitution) : ApplyRule = struct
 
     (** This is the main work-horse. *)
     let rec apply_rule (rl: string rule) (expr: string expr) : string expr option = None
+
   
 end
