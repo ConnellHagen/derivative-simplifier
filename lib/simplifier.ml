@@ -28,7 +28,7 @@ module SubMap = Map.Make(String)
 
 module Substitution = struct
 
-    type 'a substitution = 'a expr SubMap.t
+    type 'a substitution = ('a expr) SubMap.t
 
     let singleton (x : string) (e : 'a expr) : 'a substitution = SubMap.(empty |> add x e)
 
@@ -72,11 +72,11 @@ module Substitution = struct
         | Fun (f, lst) -> Fun (f, List.map (fun x -> substitute subst x) lst)
         | Int i -> Int i
         | Binop (op, l, r) -> Binop (op, substitute subst l, substitute subst r)
-        | Ddx (v, e) -> ( Ddx (v, substitute subst e)
-            (* match v with
-            | Var x -> Ddx (v, substitute subst e)
-            | _ -> raise MalformedSubstitution "Error: cannot derive with respect to an expression"/ *)
-        )
+        | Ddx (v, e) -> (
+            match SubMap.find v subst with
+            | Var x -> Ddx (x, substitute subst e) 
+            | _ -> raise @@ MalformedSubstitution v
+            )
         | Var x -> SubMap.find x subst
 
     let print_sub a =
