@@ -69,12 +69,6 @@ module Substitution = struct
 
     let rec substitute (subst : 'a substitution) (pattern : string expr) : 'a expr =
         match pattern with
-        | Var x -> Var x
-        | Fun (f, lst) -> Fun (f, lst)
-        | Int i -> Int i
-        | Binop (op, l, r) -> Binop (op, l, r)
-        | Ddx (v, e) -> Ddx (v, e)
-        (* match pattern with
         | Fun (f, lst) -> Fun (f, List.map (fun x -> substitute subst x) lst)
         | Int i -> Int i
         | Binop (op, l, r) -> Binop (op, substitute subst l, substitute subst r)
@@ -83,9 +77,7 @@ module Substitution = struct
             | Var x -> Ddx (v, substitute subst e)
             | _ -> raise MalformedSubstitution "Error: cannot derive with respect to an expression"/ *)
         )
-        | Var x -> SubMap.find x subst *)
-        
-
+        | Var x -> SubMap.find x subst
 
     let print_sub a =
         let rec print_pairs =
