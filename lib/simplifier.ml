@@ -34,7 +34,7 @@ module Substitution = struct
 
     let empty : 'a substitution = SubMap.empty
 
-    let for_all (f : string -> 'a expr -> bool) (subst : 'a substitution) : bool = true
+    let for_all (f : string -> 'a expr -> bool) (subst : 'a substitution) : bool = SubMap.for_all f subst
 
     let combine_substitutions (a : 'a substitution option) (b : 'a substitution option) : 'a substitution option =
         let no_inc_dups a b =
@@ -76,7 +76,7 @@ module Substitution = struct
             match SubMap.find v subst with
             | Var x -> Ddx (x, substitute subst e) 
             | _ -> raise @@ MalformedSubstitution v
-            )
+        )
         | Var x -> SubMap.find x subst
 
     let print_sub a =
@@ -104,12 +104,12 @@ let parseRule (s : string) : string rule =
     let ast = Parser.rule Lexer.read lexbuf in
     ast
 
-module ApplyRule = ApplyRule (Substitution)
+module ApplyRuleM = ApplyRule (Substitution)
 
 let rec apply_rules expr =
     function 
     | [] -> None
-    | ((x,desc)::xs) -> (match ApplyRule.apply_rule x expr with
+    | ((x,desc)::xs) -> (match ApplyRuleM.apply_rule x expr with
     | None -> apply_rules expr xs
     | Some v -> Some (v,desc))
 
