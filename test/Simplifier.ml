@@ -1,6 +1,29 @@
 open Simplifier
 
-let _ = add_file "../data/rules.ddx"
+(* let _ = add_file "../data/rules.ddx" *)
+
+let rules = ref [
+    parseRule("x + 0 = x");
+    parseRule("0 + x = x");
+    parseRule("x * 1 = x");
+    parseRule("1 * x = x");
+    parseRule("0 * x = 0");
+    parseRule("x * 0 = 0");
+    parseRule("x - 0 = x");
+    parseRule("2 - 1 = 1");
+    parseRule("3 - 2 = 1");
+    parseRule("x ^ 1 = x");
+    parseRule("x ^ 0 = 1");
+    parseRule("d/dx x = 1");
+    parseRule("d/dx a * b = (d/dx a) * b + a * (d/dx b)");
+    parseRule("d/dx a + b = (d/dx a) + (d/dx b)");
+    parseRule("d/dx a - b = (d/dx a) - (d/dx b)");
+    parseRule("d/dx a / b = ((d/dx a) * b - (d/dx b) * a) / b^2");
+    parseRule("d/dx c = 0");
+    parseRule("d/dx c^b = log(c) * c^b * d/dx b");
+    parseRule("d/dx a^n = n * a ^ (n - 1) * d/dx a");
+    parseRule("d/dx a^b = b*a^(b - 1)*(d/dx a) + a^b*log(a)*(d/dx b)")
+]
 
 (* let _ = List.map print_endline (List.map showRule !rules) *)
 
