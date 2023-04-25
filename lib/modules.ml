@@ -120,6 +120,7 @@ module ApplyRule (Substitution : Substitution) = struct
                 else None
             | (Binop (op, l, r), Binop (op', l', r')) ->
                 if op <> op' then None
+                else if op = Pow && (no_vars l && not(no_vars l')) then None
                 else Some (Substitution.substitute (Option.get (matching lhs expr)) rhs)
             (* constants *)
             | _ -> 
@@ -145,4 +146,5 @@ module ApplyRule (Substitution : Substitution) = struct
         )
         | Fun (f, lst) ->
         | Ddx (x, e) -> *)
+
 end
