@@ -145,5 +145,4 @@ module ApplyRule (Substitution : Substitution) = struct
         )
         | Fun (f, lst) ->
         | Ddx (x, e) -> *)
-
 end
