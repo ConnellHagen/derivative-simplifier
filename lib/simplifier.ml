@@ -60,7 +60,7 @@ module Substitution = struct
             and b_pairs = SubMap.bindings b
             in
             if no_inc_dups a_pairs b_pairs 
-                then Some (SubMap.union (fun k v1 v2 -> Some v1) a b)
+                then Some (SubMap.union (fun _ v1 _ -> Some v1) a b)
                 else None
         | (_, _) -> None
 

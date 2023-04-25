@@ -50,7 +50,7 @@ module ApplyRule (Substitution : Substitution) = struct
     (Exists s2. [matching a b = Some s2]) <=> [substitute s a = b] *)
     let rec matching patt term =
         match (patt, term) with
-        | (Int i1, Int i2) -> Some Substitution.empty
+        | (Int _, Int _) -> Some Substitution.empty
         | (Binop (op, l1, r1), Binop (op', l2, r2)) ->
             if op <> op' then None
             else Substitution.combine_substitutions (matching l1 l2) (matching r1 r2)
@@ -89,10 +89,6 @@ module ApplyRule (Substitution : Substitution) = struct
         | Ddx (_, e) -> no_vars e
         | Fun (_, lst) -> List.fold_left (fun acc e -> acc && no_vars e) true lst
 
-(** To get you started, let's assume all substitutions are okay.
-    This is not true, but it will allow you to work on the other parts of the code first. *)
-    let check_substitution (subst : 'a Substitution.substitution) : bool = true
-
 (** apply_rule_toplevel [rule] [expr]
     tries to apply the rule [rule] to the expression,
     returning the rewritten form if the rule can be applied to the expression as is.
@@ -101,7 +97,7 @@ module ApplyRule (Substitution : Substitution) = struct
         let is_compatible x y = (
             match (x, y) with
             | (Int x', Int y') -> x' = y'
-            | (Var x', _) -> true
+            | (Var _, _) -> true
             | (Int _, Var _) -> false
             | _ -> false
         )
@@ -118,9 +114,9 @@ module ApplyRule (Substitution : Substitution) = struct
                 if (x = v && x' = v') || (x <> v && x' <> v') 
                 then Some (Substitution.substitute (Option.get (matching lhs expr)) rhs)
                 else None
-            | (Binop (op, l, r), Binop (op', l', r')) ->
+            | (Binop (op, l, _), Binop (op', l', _)) ->
                 if op <> op' then None
-                else if op = Pow && (no_vars l && not(no_vars l')) then None
+                else if op = Pow && (no_vars l && not (no_vars l')) then None
                 else Some (Substitution.substitute (Option.get (matching lhs expr)) rhs)
             (* constants *)
             | _ -> 
@@ -131,20 +127,23 @@ module ApplyRule (Substitution : Substitution) = struct
         | _ -> None
 
 (** This is the main work-horse. *)
-    let rec apply_rule (rl: string rule) (expr: string expr) : string expr option = None
-        (* match expr with
-        | Var x -> None
-        | Int x -> None
+    let rec apply_rule (rl: string rule) (expr: string expr) : string expr option =
+        match expr with
+        | Var _ -> apply_rule_toplevel rl expr
+        | Int _ -> apply_rule_toplevel rl expr
         | Binop (op, l, r) -> (
             match apply_rule_toplevel rl expr with
+            | Some x -> Some x
             | None -> (
                 match apply_rule rl l with
-                | None -> apply_rule r1 r
-                | Some subst -> 
+                | Some x -> Some (Binop (op, x, r))
+                | None -> (
+                    match apply_rule rl r with
+                    | Some x -> Some (Binop (op, l, x))
+                    | None -> None
+                )
             )
-            | Some 
         )
-        | Fun (f, lst) ->
-        | Ddx (x, e) -> *)
-
-end
+        | Fun _ -> None (* there are no function rules... *)
+        | Ddx _ -> apply_rule_toplevel rl expr
+end  

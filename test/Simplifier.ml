@@ -216,7 +216,6 @@ let () =
     | None -> print_endline "`result` is `None`"; print_endline ""
     | Some _ -> printExpr @@ Option.get result; print_endline ""
 
-
 (* toplevel application of d/dx c = 0 *)
 let top_rule = Option.get @@ get_rule 16 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Int 3)
@@ -257,3 +256,45 @@ let () =
     match result with
     | None -> print_endline "`result` is `None`"; print_endline ""
     | Some _ -> printExpr @@ Option.get result; print_endline ""
+
+(* application of d/dx c = 0 *)
+let top_rule = Option.get @@ get_rule 16 !rules
+let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Int 3)
+let result = Option.get @@ ApplyRuleM.apply_rule top_rule top_expr
+let () = print_endline "Expected: 0"
+let () = printExpr result; print_endline ""
+
+(* applying "x + 0 = 0" to (x + 0) + 1 (nested) *)
+let top_rule = Option.get @@ get_rule 0 !rules
+let (top_expr : string Simplifier__.Ast.expr) = Binop (Add, Binop (Add, Var "x", Int 0), Int 1)
+let result = Option.get @@ ApplyRuleM.apply_rule top_rule top_expr
+let () = print_endline "Expected: x + 1"
+let () = printExpr result; print_endline ""
+
+(* apply_rule on a non-integer constant *)
+let top_rule = Option.get @@ get_rule 16 !rules
+let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Binop (Add, Int 4, Int 3))
+let result = Option.get @@ ApplyRuleM.apply_rule top_rule top_expr
+let () = print_endline "Expected: 0"
+let () = printExpr result; print_endline ""
+
+(* application of d/dx x = 1 with non-matching variables *)
+let top_rule = Option.get @@ get_rule 11 !rules
+let (top_expr : string Simplifier__.Ast.expr) = Ddx ("x", Var "y")
+let result = ApplyRuleM.apply_rule top_rule top_expr
+let () = print_endline "Expected: `result` is `None`"
+let () = 
+    match result with
+    | None -> print_endline "`result` is `None`"; print_endline ""
+    | Some _ -> printExpr @@ Option.get result; print_endline ""
+
+let top_rule = Option.get @@ get_rule 2 !rules
+let (top_expr : string Simplifier__.Ast.expr) = 
+    Binop (
+        Mult,
+        Binop (Mult, Binop (Mult, Var "x", Int 1), Binop (Mult, Var "x", Int 1)),
+        Binop (Mult, Binop (Mult, Var "x", Int 1), Binop (Mult, Var "x", Int 1))
+    )
+    let result = Option.get @@ ApplyRuleM.apply_rule top_rule top_expr
+    let () = print_endline "Expected: (x*(x*1))*((x*1)*(x*1))"
+    let () = printExpr result; print_endline ""
