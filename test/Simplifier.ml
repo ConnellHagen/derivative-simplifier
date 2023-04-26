@@ -1,29 +1,6 @@
 open Simplifier
 
 let _ = add_file "../data/rules.ddx"
-(* 
-let rules = ref [
-    parseRule("x + 0 = x");
-    parseRule("0 + x = x");
-    parseRule("x * 1 = x");
-    parseRule("1 * x = x");
-    parseRule("0 * x = 0");
-    parseRule("x * 0 = 0");
-    parseRule("x - 0 = x");
-    parseRule("2 - 1 = 1");
-    parseRule("3 - 2 = 1");
-    parseRule("x ^ 1 = x");
-    parseRule("x ^ 0 = 1");
-    parseRule("d/dx x = 1");
-    parseRule("d/dx a * b = (d/dx a) * b + a * (d/dx b)");
-    parseRule("d/dx a + b = (d/dx a) + (d/dx b)");
-    parseRule("d/dx a - b = (d/dx a) - (d/dx b)");
-    parseRule("d/dx a / b = ((d/dx a) * b - (d/dx b) * a) / b^2");
-    parseRule("d/dx c = 0");
-    parseRule("d/dx c^b = log(c) * c^b * d/dx b");
-    parseRule("d/dx a^n = n * a ^ (n - 1) * d/dx a");
-    parseRule("d/dx a^b = b*a^(b - 1)*(d/dx a) + a^b*log(a)*(d/dx b)")
-] *)
 
 let _ = List.map print_endline (List.map showRule !rules)
 
@@ -288,6 +265,7 @@ let () =
     | None -> print_endline "`result` is `None`"; print_endline ""
     | Some _ -> printExpr @@ Option.get result; print_endline ""
 
+(* apply_rule only applies the rule the first opportunity to do so *)
 let top_rule = Option.get @@ get_rule 17 !rules
 let (top_expr : string Simplifier__.Ast.expr) = 
     Binop (
@@ -295,6 +273,16 @@ let (top_expr : string Simplifier__.Ast.expr) =
         Binop (Mult, Binop (Mult, Var "x", Int 1), Binop (Mult, Var "x", Int 1)),
         Binop (Mult, Binop (Mult, Var "x", Int 1), Binop (Mult, Var "x", Int 1))
     )
-    let result = Option.get @@ ApplyRuleM.apply_rule top_rule top_expr
-    let () = print_endline "Expected: (x*(x*1))*((x*1)*(x*1))"
-    let () = printExpr result; print_endline ""
+let result = Option.get @@ ApplyRuleM.apply_rule top_rule top_expr
+let () = print_endline "Expected: (x*(x*1))*((x*1)*(x*1))"
+let () = printExpr result; print_endline ""
+
+(* taking derivatives on a variable not being differentiated upon should not work *)
+let top_rule = Option.get @@ get_rule 3 !rules
+let (top_expr : string Simplifier__.Ast.expr) = Ddx ("x", Var "y")
+let result = ApplyRuleM.apply_rule top_rule top_expr
+let () = print_endline "Expected: `result` is `None`"
+let () = 
+    match result with
+    | None -> print_endline "`result` is `None`"; print_endline ""
+    | Some _ -> printExpr @@ Option.get result; print_endline ""

@@ -40,6 +40,21 @@ module type ApplyRule = sig
     (* val matching *)
 end
 
+(** no_vars [e] returns whether there are any variables in [e].
+    The purpose of this function is to know if the subexpression
+    can be considered to be a constant, i.e. for a rule like 'd/dx c = 0'.
+    For that reason, the occurrence of d/dx itself is not considered a variable. *)
+    let rec no_vars e =
+        match e with
+        | Var x -> (
+            if String.get x 0 = 'c' then true
+            else false
+        )
+        | Int _ -> true
+        | Binop (_, l, r) -> (no_vars l) && (no_vars r)
+        | Ddx (_, e) -> no_vars e
+        | Fun (_, lst) -> List.fold_left (fun acc e -> acc && no_vars e) true lst
+
 module ApplyRule (Substitution : Substitution) = struct
 (** matching [pattern] [term]
     finds a substitution that can be applied to [pattern] to make
@@ -71,23 +86,12 @@ module ApplyRule (Substitution : Substitution) = struct
                     (Some Substitution.empty)
                     (List.map2 (fun a b -> matching a b) lst1 lst2)
             )
-        | (Var x, _) -> Some (Substitution.singleton x term) (*(Substitution.singleton x term)*)
+        | (Var x, _) ->
+            if no_vars patt && not (no_vars term) then None
+            else Some (Substitution.singleton x term) (*(Substitution.singleton x term)*)
         | _ -> None
 
-(** no_vars [e] returns whether there are any variables in [e].
-    The purpose of this function is to know if the subexpression
-    can be considered to be a constant, i.e. for a rule like 'd/dx c = 0'.
-    For that reason, the occurrence of d/dx itself is not considered a variable. *)
-    let rec no_vars e =
-        match e with
-        | Var x -> (
-            if String.get x 0 = 'c' then true
-            else false
-        )
-        | Int _ -> true
-        | Binop (_, l, r) -> (no_vars l) && (no_vars r)
-        | Ddx (_, e) -> no_vars e
-        | Fun (_, lst) -> List.fold_left (fun acc e -> acc && no_vars e) true lst
+
 
 (** apply_rule_toplevel [rule] [expr]
     tries to apply the rule [rule] to the expression,
@@ -111,8 +115,8 @@ module ApplyRule (Substitution : Substitution) = struct
         | (Ddx (x, e), Ddx (x', e')) -> (
             match (e, e') with
             | (Var v, Var v') ->
-                if (x = v && x' = v') || (x <> v && x' <> v') 
-                then Some (Substitution.substitute (Option.get (matching lhs expr)) rhs)
+                if ((x = v && x' = v') || (x <> v && x' <> v')) && (not @@ no_vars e)
+                    then Some (Substitution.substitute (Option.get (matching lhs expr)) rhs)
                 else None
             | (Binop (op, l, _), Binop (op', l', _)) ->
                 if op <> op' then None
