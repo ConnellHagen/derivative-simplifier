@@ -1,7 +1,7 @@
 open Simplifier
 
-(* let _ = add_file "../data/rules.ddx" *)
-
+let _ = add_file "../data/rules.ddx"
+(* 
 let rules = ref [
     parseRule("x + 0 = x");
     parseRule("0 + x = x");
@@ -23,9 +23,9 @@ let rules = ref [
     parseRule("d/dx c^b = log(c) * c^b * d/dx b");
     parseRule("d/dx a^n = n * a ^ (n - 1) * d/dx a");
     parseRule("d/dx a^b = b*a^(b - 1)*(d/dx a) + a^b*log(a)*(d/dx b)")
-]
+] *)
 
-(* let _ = List.map print_endline (List.map showRule !rules) *)
+let _ = List.map print_endline (List.map showRule !rules)
 
 let test_sub = Substitution.empty
 
@@ -158,21 +158,21 @@ let rec get_rule x rules =
 
 
 (* toplevel application of x + 0 = x *)
-let top_rule = Option.get @@ get_rule 0 !rules
+let top_rule = Option.get @@ get_rule 19 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Binop (Add, Var "x", Int 0)
 let result = Option.get @@ ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: x"
 let () = printExpr result; print_endline ""
 
 (* toplevel application of x + 0 = x with deeper tree *)
-let top_rule = Option.get @@ get_rule 0 !rules
+let top_rule = Option.get @@ get_rule 19 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Binop (Add, Binop (Mult, Var "x", Int 3), Int 0) (* (x * 3) + 0 *)
 let result = Option.get @@ ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: x * 3"
 let () = printExpr result; print_endline ""
 
 (* toplevel application of x + 0 = x applying seperately for subtree *)
-let top_rule = Option.get @@ get_rule 0 !rules
+let top_rule = Option.get @@ get_rule 19 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Binop (Add, Binop (Add, Var "x", Int 0), Int 0)
 let result_intermediate = Option.get @@ ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let result =              Option.get @@ ApplyRuleM.apply_rule_toplevel top_rule result_intermediate
@@ -180,7 +180,7 @@ let () = print_endline "Expected: x"
 let () = printExpr result; print_endline ""
 
 (* toplevel application with wrong operation *)
-let top_rule = Option.get @@ get_rule 0 !rules
+let top_rule = Option.get @@ get_rule 19 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Binop (Mult, Var "x", Int 0)
 let result = ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: `result` is `None`"
@@ -190,7 +190,7 @@ let () =
     | Some _ -> printExpr @@ Option.get result; print_endline ""
 
 (* toplevel application with wrong integer value *)
-let top_rule = Option.get @@ get_rule 2 !rules
+let top_rule = Option.get @@ get_rule 17 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Binop (Mult, Var "x", Int 0)
 let result = ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: `result` is `None`"
@@ -200,14 +200,14 @@ let () =
     | Some _ -> printExpr @@ Option.get result; print_endline ""
 
 (* toplevel application of d/dx x = 1 *)
-let top_rule = Option.get @@ get_rule 11 !rules
+let top_rule = Option.get @@ get_rule 8 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx ("y", Var "y")
 let result = Option.get @@ ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: 1"
 let () = printExpr result; print_endline ""
 
 (* toplevel application of d/dx x = 1 with non-matching variables *)
-let top_rule = Option.get @@ get_rule 11 !rules
+let top_rule = Option.get @@ get_rule 8 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx ("x", Var "y")
 let result = ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: `result` is `None`"
@@ -217,21 +217,21 @@ let () =
     | Some _ -> printExpr @@ Option.get result; print_endline ""
 
 (* toplevel application of d/dx c = 0 *)
-let top_rule = Option.get @@ get_rule 16 !rules
+let top_rule = Option.get @@ get_rule 3 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Int 3)
 let result = Option.get @@ ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: 0"
 let () = printExpr result; print_endline ""
 
 (* toplevel application of d/dx c = 0 on a constant expression that is non-integer *)
-let top_rule = Option.get @@ get_rule 16 !rules
+let top_rule = Option.get @@ get_rule 3 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Binop (Add, Int 4, Int 3))
 let result = Option.get @@ ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: 0"
 let () = printExpr result; print_endline ""
 
 (* toplevel application of d/dx c = 0 on wrong type*)
-let top_rule = Option.get @@ get_rule 16 !rules
+let top_rule = Option.get @@ get_rule 3 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Var "x")
 let result = ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: `result` is `None`"
@@ -241,14 +241,14 @@ let () =
     | Some _ -> printExpr @@ Option.get result; print_endline ""
 
 (* toplevel application of d/dx c^n *)
-let top_rule = Option.get @@ get_rule 17 !rules
+let top_rule = Option.get @@ get_rule 2 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Binop(Pow, Int 3, Binop(Add, Var "x", Int 5)))
 let result = Option.get @@ ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: (log(3) * (3^(x + 5)))*(d/dx (x + 5))"
 let () = printExpr result; print_endline ""
 
 (* toplevel application of d/dx c^n with non-constant base *)
-let top_rule = Option.get @@ get_rule 17 !rules
+let top_rule = Option.get @@ get_rule 2 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Binop(Pow, Var "x", Binop(Add, Var "x", Int 5)))
 let result = ApplyRuleM.apply_rule_toplevel top_rule top_expr
 let () = print_endline "Expected: `result` is `None`"
@@ -258,28 +258,28 @@ let () =
     | Some _ -> printExpr @@ Option.get result; print_endline ""
 
 (* application of d/dx c = 0 *)
-let top_rule = Option.get @@ get_rule 16 !rules
+let top_rule = Option.get @@ get_rule 3 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Int 3)
 let result = Option.get @@ ApplyRuleM.apply_rule top_rule top_expr
 let () = print_endline "Expected: 0"
 let () = printExpr result; print_endline ""
 
 (* applying "x + 0 = 0" to (x + 0) + 1 (nested) *)
-let top_rule = Option.get @@ get_rule 0 !rules
+let top_rule = Option.get @@ get_rule 19 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Binop (Add, Binop (Add, Var "x", Int 0), Int 1)
 let result = Option.get @@ ApplyRuleM.apply_rule top_rule top_expr
 let () = print_endline "Expected: x + 1"
 let () = printExpr result; print_endline ""
 
 (* apply_rule on a non-integer constant *)
-let top_rule = Option.get @@ get_rule 16 !rules
+let top_rule = Option.get @@ get_rule 3 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx("x", Binop (Add, Int 4, Int 3))
 let result = Option.get @@ ApplyRuleM.apply_rule top_rule top_expr
 let () = print_endline "Expected: 0"
 let () = printExpr result; print_endline ""
 
 (* application of d/dx x = 1 with non-matching variables *)
-let top_rule = Option.get @@ get_rule 11 !rules
+let top_rule = Option.get @@ get_rule 8 !rules
 let (top_expr : string Simplifier__.Ast.expr) = Ddx ("x", Var "y")
 let result = ApplyRuleM.apply_rule top_rule top_expr
 let () = print_endline "Expected: `result` is `None`"
@@ -288,7 +288,7 @@ let () =
     | None -> print_endline "`result` is `None`"; print_endline ""
     | Some _ -> printExpr @@ Option.get result; print_endline ""
 
-let top_rule = Option.get @@ get_rule 2 !rules
+let top_rule = Option.get @@ get_rule 17 !rules
 let (top_expr : string Simplifier__.Ast.expr) = 
     Binop (
         Mult,

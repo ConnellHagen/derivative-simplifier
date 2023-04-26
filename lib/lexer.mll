@@ -2,7 +2,7 @@
 open Parser
 }
 
-let white = [' ' '\t']+
+let white = [' ' '\t' '\r' '\n']+
 let digit = ['0'-'9']
 let int = '-'? digit+
 let letter = ['a'-'z' 'A'-'Z']
